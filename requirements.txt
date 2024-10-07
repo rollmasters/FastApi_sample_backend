@@ -14,9 +14,12 @@ pytest-trio
 pytest-twisted
 twisted
 asgi_lifespan
+pydantic[email]
 pydantic-settings~=2.5.2
 python-dotenv~=0.21.0
 pymongo~=4.9.2
+mongomock
 pytest~=8.3.3
 httpx~=0.27.0
 asgi-lifespan~=2.1.0
+bcrypt

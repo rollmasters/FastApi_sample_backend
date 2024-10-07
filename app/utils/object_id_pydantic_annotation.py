@@ -3,10 +3,15 @@ from pydantic import GetCoreSchemaHandler
 from pydantic_core import core_schema, CoreSchema
 from pydantic.json_schema import JsonSchemaValue
 
+
 class PyObjectId(ObjectId):
     @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
     def __get_pydantic_core_schema__(
-        cls, source_type: type, handler: GetCoreSchemaHandler
+            cls, source_type: type, handler: GetCoreSchemaHandler
     ) -> CoreSchema:
         # Define the core schema for validation
         return core_schema.general_after_validator_function(
@@ -16,7 +21,7 @@ class PyObjectId(ObjectId):
 
     @classmethod
     def __get_pydantic_json_schema__(
-        cls, core_schema: CoreSchema, handler: GetCoreSchemaHandler
+            cls, core_schema: CoreSchema, handler: GetCoreSchemaHandler
     ) -> JsonSchemaValue:
         # Generate JSON schema representation for the PyObjectId
         json_schema = handler(core_schema)
@@ -32,3 +37,6 @@ class PyObjectId(ObjectId):
             raise ValueError(f"Invalid ObjectId: {v}")
         return str(ObjectId(v))  # Convert valid ObjectId string back to string
 
+    @classmethod
+    def __modify_schema__(cls, field_schema):
+        field_schema.update(type="string")
