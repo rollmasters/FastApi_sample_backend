@@ -1,3 +1,4 @@
+from charset_normalizer.utils import is_accentuated
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -45,6 +46,7 @@ async def signup(user_in: UserCreate, db: AsyncIOMotorClient = Depends(get_db)):
         is_company=user_in.is_company,
         company_id=str(company_id),
         promo=user_in.promo,
+        is_active=True,
     )
 
     result = await user_collection.insert_one(user.model_dump(by_alias=True, exclude=["company_id"]))
@@ -87,14 +89,14 @@ async def login(
     user_data = await user_collection.find_one({"email": form_data.username})
     if not user_data:
         raise HTTPException(status_code=400, detail="Incorrect email or password")
-
+    user_data["_id"] = str(user_data.get("_id"))
     user = UserInDB(**user_data)
     if user.hashed_password:
         if not verify_password(form_data.password, user.hashed_password):
             raise HTTPException(status_code=400, detail="Incorrect email or password")
     else:
         raise HTTPException(status_code=400, detail="Password not set for this user")
-    if not user.is_active:
+    if not user.is_verified:
         raise HTTPException(status_code=400, detail="Email not verified")
     access_token = create_access_token(data={"user_id": str(user.id)})
     return Token(access_token=access_token)
