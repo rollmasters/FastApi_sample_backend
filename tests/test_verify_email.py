@@ -1,9 +1,9 @@
-
 import pytest
 from fastapi import status
 from unittest.mock import MagicMock
 from bson import ObjectId
 from app.main import app
+
 
 # Mock the decode_access_token function
 def mock_decode_access_token(token: str):
@@ -13,15 +13,20 @@ def mock_decode_access_token(token: str):
         return None
     elif token == "token_without_user_id":
         return {
-            "test":"test"
+            "test": "test"
         }
     else:
         return None
 
+
 # Patch the decode_access_token function using the monkeypatch fixture
 @pytest.fixture(autouse=True)
 def patch_decode_access_token(monkeypatch):
-    monkeypatch.setattr('app.api.v2.endpoints.auth.decode_access_token', mock_decode_access_token)
+    monkeypatch.setattr(
+        'app.api.v2.endpoints.auth.decode_access_token',
+        mock_decode_access_token
+    )
+
 
 def test_verify_email_success(test_client, mock_db):
     # Mock the database update_one method to simulate successful update
@@ -43,6 +48,7 @@ def test_verify_email_success(test_client, mock_db):
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {"message": "User verified successfully"}
 
+
 def test_verify_email_invalid_token(test_client):
     # Prepare the request data
     token_data = {
@@ -56,6 +62,7 @@ def test_verify_email_invalid_token(test_client):
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json() == {"detail": "Invalid or expired token"}
 
+
 def test_verify_email_token_without_user_id(test_client):
     # Prepare the request data
     token_data = {
@@ -68,6 +75,7 @@ def test_verify_email_token_without_user_id(test_client):
     # Assert response
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json() == {"detail": "Invalid token"}
+
 
 def test_verify_email_user_not_found_or_already_verified(test_client, mock_db):
     # Mock the database update_one method to simulate no document updated

@@ -5,7 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from datetime import timedelta
 
 from app.core.config import settings
-from app.schemas.user import UserCreate, UserOut, Token, TokenJWT
+from app.schemas.user import UserCreate, UserOut, Token, TokenJWT, ForgotPasswordRequest, ResetPasswordRequest
 from app.models.user import UserInDB
 
 from app.utils.security import (
@@ -104,8 +104,8 @@ async def login(
 
 @router.post("/verify-email")
 async def verify_email(
-    token_data: TokenJWT,
-    db: AsyncIOMotorClient = Depends(get_db)
+        token_data: TokenJWT,
+        db: AsyncIOMotorClient = Depends(get_db)
 ):
     token = token_data.token
     payload = decode_access_token(token)
@@ -125,9 +125,12 @@ async def verify_email(
 
 
 @router.post("/forgot-password")
-async def forgot_password(email: str, db: AsyncIOMotorClient = Depends(get_db)):
-    user_collection = db["Users"]
-    user_data = await user_collection.find_one({"email": email})
+async def forgot_password(
+        request: ForgotPasswordRequest,
+        db: AsyncIOMotorClient = Depends(get_db)
+):
+    user_collection = db["Registered_users"]
+    user_data = await user_collection.find_one({"email":request.email})
     if not user_data:
         raise HTTPException(status_code=400, detail="Email not found")
     user_data["_id"] = str(user_data.get("_id"))
@@ -136,9 +139,21 @@ async def forgot_password(email: str, db: AsyncIOMotorClient = Depends(get_db)):
     reset_token = create_access_token(token_data, expires_delta=timedelta(hours=1))
     reset_link = f"http://{settings.DOMAIN}/reset-password?token={reset_token}"
     email_body = f"""
-    <p>You requested a password reset.</p>
-    <p>Click the link below to reset your password:</p>
-    <p><a href="{reset_link}">Reset Password</a></p>
+    <!DOCTYPE html>
+	<html>
+	    <head>
+	        <title>Password Reset</title>
+	    </head>
+	    <body>
+	        <h2>Hello,</h2>
+	        <p>You have requested a password reset for your MORSE VERSE account. No worries, it happens to the best of us.</p>
+	        <p>Click the link below to reset your password:</p>
+    <p><a href="{reset_link}">Reset my password</a></p>
+     <p>If you did not request a password reset, please ignore this email or get in touch if you have questions.</p>
+	        <p>Thanks,</p>
+	        <p>Your friends at MORSE VERSE</p>
+	    </body>
+	</html>
     """
     send_email(user.email, "Password Reset", email_body)
     return {"message": "Password reset email sent"}
@@ -146,15 +161,18 @@ async def forgot_password(email: str, db: AsyncIOMotorClient = Depends(get_db)):
 
 @router.post("/reset-password")
 async def reset_password(
-        token: str, new_password: str, db: AsyncIOMotorClient = Depends(get_db)
+        request: ResetPasswordRequest,
+        db: AsyncIOMotorClient = Depends(get_db)
 ):
+    token = request.token
+    new_password = request.new_password
     payload = decode_access_token(token)
     if not payload:
         raise HTTPException(status_code=400, detail="Invalid or expired token")
     user_id = payload.get("user_id")
     if not user_id:
         raise HTTPException(status_code=400, detail="Invalid token")
-    user_collection = db["Users"]
+    user_collection = db["Registered_users"]
     hashed_password = get_password_hash(new_password)
     result = await user_collection.update_one(
         {"_id": ObjectId(user_id)},
