@@ -79,3 +79,5 @@ class Token(BaseModel):
             }
         },
     )
+class TokenJWT(BaseModel):
+    token: str

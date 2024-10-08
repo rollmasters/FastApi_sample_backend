@@ -5,7 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from datetime import timedelta
 
 from app.core.config import settings
-from app.schemas.user import UserCreate, UserOut, Token
+from app.schemas.user import UserCreate, UserOut, Token, TokenJWT
 from app.models.user import UserInDB
 
 from app.utils.security import (
@@ -102,22 +102,26 @@ async def login(
     return Token(access_token=access_token)
 
 
-@router.get("/verify-email")
-async def verify_email(token: str, db: AsyncIOMotorClient = Depends(get_db)):
+@router.post("/verify-email")
+async def verify_email(
+    token_data: TokenJWT,
+    db: AsyncIOMotorClient = Depends(get_db)
+):
+    token = token_data.token
     payload = decode_access_token(token)
     if not payload:
         raise HTTPException(status_code=400, detail="Invalid or expired token")
     user_id = payload.get("user_id")
     if not user_id:
         raise HTTPException(status_code=400, detail="Invalid token")
-    user_collection = db["Users"]
+    user_collection = db["Registered_users"]
     result = await user_collection.update_one(
         {"_id": ObjectId(user_id)},
-        {"$set": {"is_active": True, "is_verified": True}},
+        {"$set": {"is_verified": True}}
     )
     if result.modified_count == 0:
-        raise HTTPException(status_code=400, detail="User not found or already verified")
-    return {"message": "Email verified successfully"}
+        raise HTTPException(status_code=404, detail="User not found or already verified")
+    return {"message": "User verified successfully"}
 
 
 @router.post("/forgot-password")
@@ -126,10 +130,11 @@ async def forgot_password(email: str, db: AsyncIOMotorClient = Depends(get_db)):
     user_data = await user_collection.find_one({"email": email})
     if not user_data:
         raise HTTPException(status_code=400, detail="Email not found")
+    user_data["_id"] = str(user_data.get("_id"))
     user = UserInDB(**user_data)
     token_data = {"user_id": str(user.id)}
     reset_token = create_access_token(token_data, expires_delta=timedelta(hours=1))
-    reset_link = f"http://yourdomain.com/reset-password?token={reset_token}"
+    reset_link = f"http://{settings.DOMAIN}/reset-password?token={reset_token}"
     email_body = f"""
     <p>You requested a password reset.</p>
     <p>Click the link below to reset your password:</p>
@@ -158,18 +163,3 @@ async def reset_password(
     if result.modified_count == 0:
         raise HTTPException(status_code=400, detail="User not found")
     return {"message": "Password reset successful"}
-
-
-@router.get("/me", response_model=UserOut)
-async def read_users_me(current_user: UserInDB = Depends(get_current_user)):
-    return UserOut(**current_user.dict())
-
-
-@router.post("/logout")
-async def logout():
-    # Since JWT tokens are stateless, logout can be handled on the client side by deleting the token.
-    return {"message": "Logout successful"}
-
-# Optional: Implement social login endpoints if needed
-# For example, Google Login
-# This requires handling OAuth2 flows and is beyond the scope of this code snippet.

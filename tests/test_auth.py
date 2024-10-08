@@ -171,7 +171,6 @@ async def test_login_password_unset_unverified(test_client: TestClient, mock_db:
     assert data["detail"] == "Email not verified"
 
 
-
 @pytest.mark.asyncio
 async def test_login_incorrect_password_email(test_client: TestClient, mock_db: MockDatabase):
     mock_user_data_incorrect_password = {
@@ -205,6 +204,16 @@ async def test_login_incorrect_password_email(test_client: TestClient, mock_db: 
     assert response.status_code == 400
     data = response.json()
     assert data["detail"] == "Incorrect email or password"
+
+def mock_decode_access_token(token: str):
+    if token == "valid_token":
+        return {"user_id": "60d21b4667d0d8992e610c85"}  # Valid user ID
+    elif token == "invalid_token":
+        return None
+    elif token == "token_without_user_id":
+        return {}
+    else:
+        return None
 
 # @pytest.mark.asyncio
 # async def test_verify_email(client, mock_db: MockDatabase):
