@@ -7,11 +7,13 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 80 --reload
     volumes:
       - .:/code
+      - C:/Users/mona1/Desktop/work/backend_v2/service-account.json
     ports:
       - 8000:80
     environment:
       - MONGODB_URL=mongodb://mongo:27017
       - MONGODB_DB_NAME=fastapi_db_v2
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/service-account.json
     depends_on:
       - mongo
 

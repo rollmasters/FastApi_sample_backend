@@ -45,6 +45,9 @@ class MockDatabase:
     async def _mock_get_db(self):
         yield self.mock_db_instance
 
+    async def _get_db_spatial_ai(self):
+        yield self.mock_db_instance
+
     def setup(self):
         """
         Override the get_db dependency with the mock database.

@@ -7,7 +7,7 @@ from typing import List, Optional
 
 
 def send_email(
-        to_email: str,
+        to_email: str or List[str],
         subject: str,
         body: str,
         *,
@@ -17,7 +17,7 @@ def send_email(
     """
     Sends an email using SMTP server configurations from settings.
 
-    :param to_email: Recipient's email address.
+    :param to_email: Recipient's email address or list of email addresses.
     :param subject: Subject of the email.
     :param body: Body content of the email.
     :param subtype: MIME subtype ('html' or 'plain').
@@ -26,6 +26,10 @@ def send_email(
     msg = MIMEMultipart()
     msg["Subject"] = subject
     msg["From"] = f"{settings.EMAIL_FROM_NAME} <{settings.EMAIL_FROM}>"
+
+    # If to_email is a list, join into a comma-separated string
+    if isinstance(to_email, list):
+        to_email = ", ".join(to_email)
     msg["To"] = to_email
 
     # Add body to email

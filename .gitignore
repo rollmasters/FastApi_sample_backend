@@ -76,3 +76,4 @@ coverage.xml
 
 # Jupyter Notebook
 .ipynb_checkpoints
+/service-account.json
