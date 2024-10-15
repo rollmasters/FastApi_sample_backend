@@ -37,7 +37,7 @@ async def get_coordinates(project_name: str):
 
                     # Update coordinates image URLs
                     for coord in image["coordinates"]:
-                        coord["image"] = f"{coord['image']}"
+                        coord["image"] = coord['image']
 
                 return project
 

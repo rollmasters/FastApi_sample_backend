@@ -18,7 +18,7 @@ mock_project_data = {
                             "x": 0.5,
                             "y": 1.0,
                             "z": -0.5,
-                            "image": "images/project1/point1.jpg",
+                            "image": ["images/project1/point1.jpg"],
                             "description": "Clickable point 1"
                         }
                     ]

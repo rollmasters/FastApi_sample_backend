@@ -5,7 +5,7 @@ class Coordinate(BaseModel):
     x: float
     y: float
     z: float
-    image: str
+    image: List[str]
     description: Optional[str]
 
 class Image(BaseModel):
