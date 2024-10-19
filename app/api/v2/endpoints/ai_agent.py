@@ -45,3 +45,4 @@ async def store_user_messages_text(request: Request, input: UserMessageText):
         return ai_response
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+

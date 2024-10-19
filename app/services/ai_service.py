@@ -1,7 +1,8 @@
 import base64
 import os
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
+from typing import List
 
 from fastapi import HTTPException
 from mongomock.object_id import ObjectId
@@ -11,7 +12,7 @@ from app.utils.http_client import send_request
 from app.utils.security import validate_object_id
 from app.models.user_messages import UserMessages
 from app.models.user_messages import AIResponse as Ai_api_answer
-from app.schemas.ai_agent import AIResponse
+from app.schemas.ai_agent import AIResponse, AISummary, MessageDetail
 from app.database import get_db_spatial_ai
 from app.core.config import settings
 
@@ -73,8 +74,9 @@ async def process_ai_response_text(input):
         filter_query = {"companyId": company_id, "userId": user_id}
         user_messages_list =  await collection.find(filter_query).to_list(length=None)
         # Convert documents to Pydantic models
-        user_messages = [UserMessages(**message) for message in user_messages_list]
-
+        user_messages = [
+            UserMessages(**{**message, "_id": str(message["_id"])}) for message in user_messages_list
+        ]
         # Serialize models to dictionaries with correct field names
         user_messages_json = [message.model_dump(by_alias=True) for message in user_messages]
         payload = {
@@ -155,3 +157,27 @@ def clean_string(text):
 
 async def insert_user_message_async(collection, user_message):
     await collection.insert_one(user_message.dict())
+
+
+def summarize_data(messages: List[UserMessages]) -> AISummary:
+    total_questions = len(messages)
+    total_time = timedelta()
+
+    results = []
+    for message in messages:
+        if message.AIResponses.process_time:
+            total_time += timedelta(seconds=message.AIResponses.process_time)
+
+        results.append(MessageDetail(
+            userId=str(message.userId),
+            question=message.AIResponses.question,
+            answer=message.AIResponses.answer,
+            time=message.time
+        ))
+
+    # Return the summary using the AISummary schema
+    return AISummary(
+        total_questions=total_questions,
+        total_time=str(total_time),
+        details=results
+    )

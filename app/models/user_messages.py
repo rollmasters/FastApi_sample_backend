@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 
 
@@ -14,8 +14,11 @@ class AIResponse(BaseModel):
     process_time: Optional[float]=None
     lang: Optional[str]=None
     voice: Optional[str] = Field(alias='voice_answer', default=None)
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(
+        populate_by_name=True,
+        arbitrary_types_allowed=True,
+        json_encoders={PyObjectId: str}
+    )
 
 
 class UserMessages(BaseModel):
@@ -23,10 +26,11 @@ class UserMessages(BaseModel):
     companyId: PyObjectId = Field(default_factory=PyObjectId, alias='companyId')
     userId: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias='userId')
     AIResponses: AIResponse = Field(alias='messages')
-    lang: str
+    lang: Optional[str] = "EN-US"
     time: datetime
 
-    class Config:
-        populate_by_name = True
-        arbitrary_types_allowed = True
-        json_encoders = {PyObjectId: str}
+    model_config = ConfigDict(
+        populate_by_name=True,
+        arbitrary_types_allowed=True,
+        json_encoders={PyObjectId: str}
+    )
