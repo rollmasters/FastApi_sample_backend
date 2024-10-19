@@ -100,3 +100,10 @@ async def get_current_user(
     if not user_data:
         raise credentials_exception
     return UserInDB(**user_data)
+
+
+def validate_object_id(id_str: str):
+    """Validate that the provided string is a valid MongoDB ObjectId."""
+    if not ObjectId.is_valid(id_str):
+        raise HTTPException(status_code=400, detail=f"Invalid ObjectId: {id_str}")
+    return ObjectId(id_str)  # Return the valid ObjectId instance

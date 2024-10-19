@@ -37,6 +37,10 @@ class Settings(BaseSettings):
 
     GCS_BUCKET_NAME: str = os.getenv("GCS_BUCKET_NAME", "your-gcs-bucket")
     GCS_FILE_PATH: str = os.getenv("GCS_FILE_PATH", "path/to/coordinates.json")
+
+    # AI_Agent
+    AI_SITE: str = os.getenv("AI_SITE", "default")
+
     class Config:
         env_file = ".env"  # Load variables from .env file if it exists
 
