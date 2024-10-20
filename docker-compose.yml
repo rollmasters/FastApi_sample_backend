@@ -13,17 +13,7 @@ services:
       - MONGODB_URL=mongodb://mongo:27017
       - MONGODB_DB_NAME=fastapi_db_v2
       - GOOGLE_APPLICATION_CREDENTIALS=/code/app/service-account.json
-      - SMTP_USER=no-reply@morseverse.com
-      - SMTP_PASSWORD=Qarjej-6feqga-toxmev
-      - SMTP_HOST=smtp.ionos.it
-      - SMTP_PORT=587
-      - EMAIL_FROM=no-reply@morseverse.com
-      - EMAIL_FROM_NAME=Morseverse
-      - SECRET_KEY=_RgL9B_@CTTxFEs!&:j5,,qS'DU?dT
-      - MONGODB_DB_NAME_SPETIAL_AI=specialAI
-      - GCS_BUCKET_NAME=morse-sample-data
-      - GCS_FILE_PATH=coordinates/coordinates.json
-      - AI_SITE=https://morseverse.com/ai_agent
+
     depends_on:
       - mongo
 
