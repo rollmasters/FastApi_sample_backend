@@ -214,4 +214,23 @@ async def get_ai_summary(company_id: str, db=Depends(get_db_spatial_ai)):
 
     return summary
 
+@router.post("/ai_agent", response_model=dict)
+async def create_ai_agent(agent: TableData, db=Depends(get_db_spatial_ai)):
+    # Check if the companyID is provided
+    if not agent.companyId:
+        raise HTTPException(status_code=400, detail="Company ID is required")
+
+    # Set the current date if not provided
+    if agent.date is None:
+        agent.date = datetime.now()
+
+    # Insert into MongoDB
+    collection = db["changes"]
+    try:
+        result = await collection.insert_one(agent.model_dump(by_alias=True))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to create new AI agent")
+
+    return {"message": "AI agent created successfully", "id": str(result.inserted_id)}
+
 
