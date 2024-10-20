@@ -1,7 +1,7 @@
-fastapi
-uvicorn
-motor
-pydantic[email]
+fastapi~=0.115.0
+uvicorn~=0.31.0
+motor~=3.6.0
+pydantic[email]~=2.9.2
 python-jose[cryptography]
 passlib[bcrypt]
 python-multipart
