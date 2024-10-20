@@ -1,3 +1,4 @@
+# docker-compose.yml
 version: '3.8'
 
 services:
@@ -6,13 +7,13 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 80 --reload
     volumes:
       - .:/code
-      - ./service-account.json:/code/app/service-account.json
+      - C:/Users/mona1/Desktop/work/backend_v2/service-account.json
     ports:
       - 8000:80
     environment:
       - MONGODB_URL=mongodb://mongo:27017
       - MONGODB_DB_NAME=fastapi_db_v2
-      - GOOGLE_APPLICATION_CREDENTIALS=/code/app/service-account.json
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/service-account.json
       - SMTP_USER=no-reply@morseverse.com
       - SMTP_PASSWORD=Qarjej-6feqga-toxmev
       - SMTP_HOST=smtp.ionos.it
@@ -21,6 +22,7 @@ services:
       - EMAIL_FROM_NAME=Morseverse
       - SECRET_KEY=_RgL9B_@CTTxFEs!&:j5,,qS'DU?dT
       - MONGODB_DB_NAME_SPETIAL_AI=specialAI
+      - GOOGLE_APPLICATION_CREDENTIALS=C:/Users/mona1/Desktop/work/backend_v2/service-account.json
       - GCS_BUCKET_NAME=morse-sample-data
       - GCS_FILE_PATH=coordinates/coordinates.json
       - AI_SITE=https://morseverse.com/ai_agent
