@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException, Request
-from mongomock.object_id import ObjectId
+
 from pydantic import BaseModel
 
 
 from app.services.ai_service import process_ai_response, process_ai_response_text
-from app.utils.http_client import send_request
+
 
 router = APIRouter()
 

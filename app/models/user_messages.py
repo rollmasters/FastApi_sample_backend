@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from bson import ObjectId
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 
@@ -32,5 +33,12 @@ class UserMessages(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
         arbitrary_types_allowed=True,
-        json_encoders={PyObjectId: str}
+        json_encoders={PyObjectId: str, ObjectId: str}
     )
+
+def convert_DB_user_message_pydantic(user_messages_list):
+    for message in user_messages_list:
+        message["_id"] = str(message.get("_id"))
+        message["companyId"] = str(message.get("companyId"))
+        message["userId"] = str(message.get("userId"))
+    return user_messages_list

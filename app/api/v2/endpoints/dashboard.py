@@ -9,7 +9,7 @@ from app.models.dashboard import Settings, TableData, AIInfo, Preferences, BugRe
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List
 
-from app.models.user_messages import UserMessages
+from app.models.user_messages import UserMessages, convert_DB_user_message_pydantic
 from app.schemas.ai_agent import AISummary
 from app.services.ai_service import summarize_data
 from app.utils.security import validate_object_id
@@ -203,16 +203,17 @@ async def get_ai_summary(company_id: str, db=Depends(get_db_spatial_ai)):
         raise HTTPException(status_code=404, detail="No messages found")
 
     # Convert MongoDB documents to Pydantic models
-    for message in user_messages_list:
-        message["_id"] = str(message.get("_id"))
-        message["companyId"] =str(message.get("companyId"))
-        message["userId"]=str(message.get("userId"))
+    user_messages_list =  convert_DB_user_message_pydantic(user_messages_list)
     user_messages = [UserMessages(**message) for message in user_messages_list]
 
     # Summarize the data
     summary = summarize_data(user_messages)
 
     return summary
+
+
+
+
 
 @router.post("/ai_agent", response_model=dict)
 async def create_ai_agent(agent: TableData, db=Depends(get_db_spatial_ai)):

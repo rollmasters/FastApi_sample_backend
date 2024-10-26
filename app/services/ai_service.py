@@ -7,16 +7,31 @@ from typing import List
 from fastapi import HTTPException
 from mongomock.object_id import ObjectId
 
+
 from app.utils.file_manger import save_audio_file
 from app.utils.http_client import send_request
+from app.utils.object_id_pydantic_annotation import PyObjectId
 from app.utils.security import validate_object_id
-from app.models.user_messages import UserMessages
+from app.models.user_messages import UserMessages, convert_DB_user_message_pydantic
 from app.models.user_messages import AIResponse as Ai_api_answer
 from app.schemas.ai_agent import AIResponse, AISummary, MessageDetail
 from app.database import get_db_spatial_ai
 from app.core.config import settings
 
+def convert_objectid_to_str(data):
+    """Recursively convert ObjectId instances in a dictionary to strings."""
+    if isinstance(data, list):
+        return [convert_objectid_to_str(item) for item in data]
+    elif isinstance(data, dict):
+        return {key: convert_objectid_to_str(value) for key, value in data.items()}
+    elif type(data).__name__ == "ObjectId":
+        return str(data)
+    elif isinstance(data, datetime):  # Convert datetime to ISO format string
+        return data.isoformat()
+    elif isinstance(data, (ObjectId, PyObjectId)):
+        return str(data)
 
+    return data
 async def process_ai_response(input):
     try:
         start_time = time.time()
@@ -28,8 +43,8 @@ async def process_ai_response(input):
         # Fetch user messages from the database
         db = await get_db_spatial_ai()
         collection = db["UserMessage"]
-        filter_query = {"companyId": ObjectId(company_id), "userId": ObjectId(user_id)}
-        user_messages =  await collection.find(filter_query).to_list(length=None)
+        filter_query = {"companyId": company_id, "userId": user_id}
+        user_messages = await collection.find(filter_query).to_list(length=None)
 
         # Send audio and user messages to AI service
         url = f"{settings.AI_SITE}/process_voice/{input.companyId}"
@@ -72,13 +87,14 @@ async def process_ai_response_text(input):
         db = await get_db_spatial_ai()
         collection = db["UserMessage"]
         filter_query = {"companyId": company_id, "userId": user_id}
-        user_messages_list =  await collection.find(filter_query).to_list(length=None)
+        user_messages_list = await collection.find(filter_query).to_list(length=None)
         # Convert documents to Pydantic models
-        user_messages = [
-            UserMessages(**{**message, "_id": str(message["_id"])}) for message in user_messages_list
-        ]
+        user_messages = convert_DB_user_message_pydantic(user_messages_list)
+        user_messages = [UserMessages(**message) for message in user_messages]
+
         # Serialize models to dictionaries with correct field names
         user_messages_json = [message.model_dump(by_alias=True) for message in user_messages]
+        user_messages_json = convert_objectid_to_str(user_messages_json)
         payload = {
             "user_messages": user_messages_json,
             "lang": input.lang,
@@ -100,8 +116,8 @@ async def process_ai_response_text(input):
                 time=str(datetime.now()),
                 AIResponses=ai_response,
                 lang=input.lang,
-                companyId=company_id,
-                userId=user_id
+                companyId=str(company_id),
+                userId=str(user_id)
             )
             await insert_user_message_async(collection, user_message)
             return ai_response
@@ -156,7 +172,7 @@ def clean_string(text):
 
 
 async def insert_user_message_async(collection, user_message):
-    await collection.insert_one(user_message.dict())
+    await collection.insert_one(convert_objectid_to_str(user_message.model_dump(by_alias=True)))
 
 
 def summarize_data(messages: List[UserMessages]) -> AISummary:

@@ -73,6 +73,7 @@ nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
+propane-cooler-392900-b9458cb8b321.json
 
 # Jupyter Notebook
 .ipynb_checkpoints

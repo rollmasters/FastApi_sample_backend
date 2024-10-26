@@ -6,23 +6,31 @@ from app.core.config import settings
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import init_db, close_db
+from app.google_drive import close_google_drive, init_google_drive
 
 # Initialize FastAPI app
 
 origins = [
     "http://localhost:3000",
     "https://www.morseverse.com",
-    "https://morseverse.com/ai_agent"
+    "https://morseverse.com/ai_agent",
+    "https://accounts.google.com"
 ]
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Initialize DB
-    await init_db()
-    yield
-    # Shutdown: Close DB
-    await close_db()
+    try:
+        # Initialize resources during startup
+        await init_db()
+        await init_google_drive()
+        yield
+    except Exception as e:
+        print(f"Error during startup: {e}")
+    finally:
+        # Clean up resources during shutdown
+        await close_google_drive()
+        await close_db()
 
 
 app = FastAPI(

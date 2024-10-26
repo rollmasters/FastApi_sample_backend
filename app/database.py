@@ -1,10 +1,13 @@
+
 from motor.motor_asyncio import AsyncIOMotorClient
 from app.core.config import settings
+
 
 # Global variable to store the database client
 client = None
 db = None
 db_spatial_ai =None
+
 
 
 async def init_db():
@@ -30,3 +33,5 @@ async def get_db():
 
 async def get_db_spatial_ai():
     return db_spatial_ai
+
+
