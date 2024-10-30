@@ -1,25 +1,31 @@
-import aiohttp
+import json
 
 import requests
-import json
+
 import os
+
 
 def send_request(url, file_path=None, lang=None, user_messages=None, payload=None):
     if file_path:
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"File not found: {file_path}")
 
-        # Prepare multipart/form-data with file
+        # Prepare multipart/form-data with file and additional fields
         with open(file_path, 'rb') as f:
+            user_messages_str = json.dumps(user_messages) if user_messages else None
             files = {
-                'file': ('output.wav', f, 'audio/wav')
+                'wavData': ('output.wav', f, 'audio/wav')  # File to upload
             }
             data = {
-                'lang': lang,
-                'user_messages': json.dumps(user_messages)
+                'lang': lang,  # Form data fields
+                'user_messages': user_messages_str  # Ensure this is a string
             }
 
             response = requests.post(url, files=files, data=data)
+            response.raise_for_status()
+            return response.json()
+
+            response = requests.post(url, files=form_data)
             response.raise_for_status()
             return response.json()
 

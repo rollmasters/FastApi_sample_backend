@@ -45,13 +45,16 @@ async def process_ai_response(input):
         collection = db["UserMessage"]
         filter_query = {"companyId": company_id, "userId": user_id}
         user_messages = await collection.find(filter_query).to_list(length=None)
-
+        user_messages = convert_DB_user_message_pydantic(user_messages)
+        user_messages = [UserMessages(**message) for message in user_messages]
+        user_messages_json = [message.model_dump(by_alias=True) for message in user_messages]
+        user_messages_json = convert_objectid_to_str(user_messages_json)
         # Send audio and user messages to AI service
         url = f"{settings.AI_SITE}/process_voice/{input.companyId}"
-        ai_response_data = await send_request(url, file_path=file_path, lang=input.lang, user_messages=user_messages)
+        ai_response_data = send_request(url, file_path=file_path, lang=input.lang, user_messages=user_messages_json)
 
         if ai_response_data:
-            ai_response = AIResponse(**ai_response_data)
+            ai_response = Ai_api_answer(**ai_response_data)
             process_ai_response_links(ai_response, input.lang)
 
             # Calculate processing time
@@ -59,11 +62,11 @@ async def process_ai_response(input):
 
             # Store user message in the database
             user_message = UserMessages(
-                time=datetime.utcnow(),
+                time=str(datetime.now()),
                 AIResponses=ai_response,
                 lang=input.lang,
-                companyId=ObjectId(company_id),
-                userId=ObjectId(user_id)
+                companyId=str(company_id),
+                userId=str(user_id)
             )
             await insert_user_message_async(collection, user_message)
             return ai_response
