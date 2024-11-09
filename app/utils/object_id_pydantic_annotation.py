@@ -43,7 +43,7 @@ from pydantic.json_schema import JsonSchemaValue
 #     def __modify_schema__(cls, field_schema):
 #         field_schema.update(type="string")
 
-class PyObjectId:
+class PyObjectId(ObjectId):
     @classmethod
     def __get_pydantic_core_schema__(
         cls, source_type: Any, handler: Any
@@ -72,3 +72,11 @@ class PyObjectId:
     @staticmethod
     def __serialize__(v: ObjectId, serializer: Any) -> str:
         return str(v)
+
+    @classmethod
+    def __get_validators__(cls):
+        # Pydantic-compatible validator generator for backward compatibility
+        yield cls.validate
+
+    def __str__(self):
+        return str(super().__str__())

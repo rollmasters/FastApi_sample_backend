@@ -32,7 +32,7 @@ async def signup(user_in: UserCreate, db: AsyncIOMotorClient = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Email already registered")
 
     # Generate company_id if is_company is True
-    company_id = PyObjectId() if user_in.is_company else None
+    company_id = str(PyObjectId()) if user_in.is_company else None
 
     # Hash the password if provided
     hashed_password = get_password_hash(user_in.password) if user_in.password else None
@@ -43,12 +43,11 @@ async def signup(user_in: UserCreate, db: AsyncIOMotorClient = Depends(get_db)):
         hashed_password=hashed_password,
         full_name=user_in.full_name,
         is_company=user_in.is_company,
-        company_id=str(company_id),
+        company_id= company_id,
         promo=user_in.promo,
         is_active=True,
     )
-
-    result = await user_collection.insert_one(user.model_dump(by_alias=True, exclude=["company_id"]))
+    result = await user_collection.insert_one(user.model_dump(by_alias=True))
     user.id = str(result.inserted_id)
 
     # Send verification email

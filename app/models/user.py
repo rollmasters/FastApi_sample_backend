@@ -5,7 +5,7 @@ from datetime import datetime
 from app.utils.object_id_pydantic_annotation import PyObjectId
 
 class UserInDB(BaseModel):
-    id: Optional[PyObjectId] = Field(alias="_id", default_factory=PyObjectId)
+    id: Optional[PyObjectId] = Field(alias="_id",  default_factory=PyObjectId)
     email: EmailStr
     hashed_password: Optional[str] = None
     is_active: bool = False
@@ -16,13 +16,13 @@ class UserInDB(BaseModel):
         description="The date and time the user joined"
     )
     is_company: bool = False
-    company_id: Optional[PyObjectId] = Field(alias="company_id", default_factory=PyObjectId)
+    company_id: Optional[PyObjectId] = None
     promo: bool = False
 
     model_config = ConfigDict(
         populate_by_name=True,
         arbitrary_types_allowed=True,
-        json_encoders={ObjectId: str},
+        json_encoders={PyObjectId:str,ObjectId: str},
         json_schema_extra={
             "example": {
                 "_id": "60d21b4667d0d8992e610c85",

@@ -31,7 +31,7 @@ async def create_subscription(person: Person, db: AsyncIOMotorDatabase = Depends
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
-@router.get("/people", response_model=SubscriptionCollection,
+@router.get("/people",
             status_code=status.HTTP_200_OK)
 async def get_subscriptions(db: AsyncIOMotorDatabase = Depends(get_db)):
     """Fetch all subscriptions from MongoDB."""
@@ -41,7 +41,8 @@ async def get_subscriptions(db: AsyncIOMotorDatabase = Depends(get_db)):
         people = []
         async for person in cursor:
             person["_id"] = str(person["_id"])  # Convert ObjectId to string
-            people.append(Person(**person))
+            people.append(person)
+
         return {"people": people}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch subscriptions: {e}")
