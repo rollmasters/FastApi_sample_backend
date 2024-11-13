@@ -22,3 +22,6 @@ class ProjectList(BaseModel):
 
 class ImageBase64Response(BaseModel):
     image_base64: str
+
+class RecommendationList(BaseModel):
+    image_paths: List[str]

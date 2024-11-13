@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     GCS_BUCKET_NAME: str = os.getenv("GCS_BUCKET_NAME", "your-gcs-bucket")
     GCS_FILE_PATH: str = os.getenv("GCS_FILE_PATH", "path/to/coordinates.json")
 
+    GCS_RECOMMENDATION_PATH: str = os.getenv("GCS_RECOMMENDATION_PATH", "path/to/recommendations")
     # AI_Agent
     AI_SITE: str = os.getenv("AI_SITE", "default")
 

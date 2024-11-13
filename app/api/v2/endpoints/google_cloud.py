@@ -1,17 +1,18 @@
 import base64
 import json
 import os
+import random
 
 from fastapi import APIRouter, HTTPException
 
 from app.core.config import settings
-from app.schemas.google_cloud import Project, ImageBase64Response
-from app.services.gcs_service import get_file_from_gcs
+from app.schemas.google_cloud import Project, ImageBase64Response, RecommendationList
+from app.services.gcs_service import get_file_from_gcs, list_images_in_bucket
 
 router = APIRouter()
 
 
-@router.get("/get-coordinates/{project_name}",response_model=Project)
+@router.get("/get-coordinates/{project_name}", response_model=Project)
 async def get_coordinates(project_name: str):
     """
     Fetch the coordinates JSON file from GCS and return the content
@@ -19,7 +20,8 @@ async def get_coordinates(project_name: str):
     """
     try:
         # Fetch the content of the JSON file from GCS
-        content = get_file_from_gcs(bucket_name=settings.GCS_BUCKET_NAME,file_path=settings.GCS_FILE_PATH,as_text=True)
+        content = get_file_from_gcs(bucket_name=settings.GCS_BUCKET_NAME, file_path=settings.GCS_FILE_PATH,
+                                    as_text=True)
 
         # Parse the JSON content
         data = json.loads(content)
@@ -72,3 +74,21 @@ async def get_image(image_path: str):
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+
+@router.get("/recommendation/{image_path:path}", response_model=RecommendationList)
+async def get_recommendation(image_path: str):
+    try:
+        list_recommendation = list_images_in_bucket(bucket_name=settings.GCS_BUCKET_NAME,
+                                                    prefix=settings.GCS_RECOMMENDATION_PATH)
+        if len(list_recommendation) < 5:
+            raise HTTPException(status_code=400, detail="Not enough images in the bucket to provide recommendations")
+
+            # Randomly select 5 images
+        recommended_images = random.sample(list_recommendation, 5)
+
+        return RecommendationList(image_paths =recommended_images)
+    except :
+        raise HTTPException(status_code=500, detail=f"Error accessing the bucket")
+
+

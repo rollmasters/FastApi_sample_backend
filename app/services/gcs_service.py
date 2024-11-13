@@ -1,4 +1,6 @@
 import os
+from typing import List
+
 from google.cloud import storage
 from app.core.config import settings  # Import the settings from your config
 
@@ -46,3 +48,37 @@ def get_file_from_gcs(bucket_name: str, file_path: str, as_text=True):
 
     except Exception as e:
         raise RuntimeError(f"An error occurred while fetching the file from GCS: {str(e)}")
+
+
+def list_images_in_bucket(bucket_name: str, prefix: str = "") -> List[str]:
+    """
+    List image URLs in a specified Google Cloud Storage bucket and optional prefix (folder).
+
+    Args:
+        bucket_name (str): The name of the Google Cloud Storage bucket.
+        prefix (str): Optional folder path within the bucket to filter images.
+
+    Returns:
+        List[str]: A list of URLs for images in the bucket.
+    """
+    storage_client = get_gcs_client()
+    image_urls = []
+
+    try:
+        # Access the specified bucket
+        bucket = storage_client.bucket(bucket_name)
+
+        # List all blobs in the bucket with the given prefix
+        blobs = bucket.list_blobs(prefix=prefix)
+
+        # Filter and add only image files to the list
+        image_urls = [
+            blob.name for blob in blobs
+            if blob.name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp'))
+        ]
+
+    except Exception as e:
+        print(f"Error accessing the bucket: {str(e)}")
+        return []
+
+    return image_urls
